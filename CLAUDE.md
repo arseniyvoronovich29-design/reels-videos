@@ -9,7 +9,11 @@
 
 ## Расписание
 - Каждый вторник (запланированная задача, ~11:00 по Новосибирску) Claude делает **5 роликов** на ближайшие **среду–воскресенье**.
-- Публикация: каждый день ср–вс в **23:00 Asia/Novosibirsk**, TikTok, один ролик в день.
+- Публикация: каждый день ср–вс, TikTok, один ролик в день. **Время — эксперимент** (просьба Арсения 03.11):
+  ставь в пики активности по Москве. Возьми `getBestTimeToPostByNetwork` (tiktok, timezone Europe/Moscow) на эти даты
+  и чередуй окна 10:00 / 12:00 / 18:00 МСК (+ иногда 19–20 МСК), чтобы сравнить. Перевод: МСК + 4 ч = Новосибирск.
+  В `publicationDate` пиши время по Новосибирску. Перед выбором посмотри `getAnalyticsDataByMetrics`/результаты
+  прошлых недель (`weeks/*/week.json`, поле `msk`): если какое-то окно явно лучше — ставь чаще в него. В сообщении Арсению укажи время по МСК и НСК.
 - Лимит бесплатного Metricool — 20 постов в месяц. Перед постановкой проверь, сколько постов уже стоит в этом месяце
   (`getScheduledPosts` за месяц); если пятёрка не влезает — поставь сколько влезает и скажи Арсению.
 
@@ -36,7 +40,7 @@
    Перед постановкой проверь, что ссылка отдаёт видео (WebFetch или curl -I может не пройти через прокси — тогда просто ставь, Metricool сам скачает).
 7. **Metricool (черновики).** brand/blogId `7840647`, timezone `Asia/Novosibirsk`, provider `tiktok`.
    `createScheduledPost` с `info`: `draft: true`, `autoPublish: true`, `media: [raw-ссылка]`, `text: caption + хештеги`,
-   `publicationDate: {dateTime: "YYYY-MM-DDT23:00:00", timezone: "Asia/Novosibirsk"}`,
+   `publicationDate: {dateTime: "YYYY-MM-DDTHH:00:00", timezone: "Asia/Novosibirsk"}` (время — см. «Расписание»),
    `tiktokData: {privacyOption: "PUBLIC_TO_EVERYONE", title: <название>, isAigc: true}`.
    Если на эту дату уже есть старый черновик — обнови его (`updateScheduledPost`) вместо создания нового.
    Запиши id/uuid постов в `weeks/<…>/week.json`.
