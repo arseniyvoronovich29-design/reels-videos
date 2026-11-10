@@ -1,142 +1,134 @@
-# Ботулизм из домашних консервов — 12 ноября 2026 (Стиль-2)
+# Ботулизм из домашних консервов — версия 3 (стиль референсов 10.11), 12 ноября 2026
 # Источники:
-#  - CDC «Botulism — Signs and Symptoms» / «Home-Canned Foods»: симптомы обычно через 18–36 ч (от 6 ч до 10 дней);
-#    двоение в глазах, опущенные веки, смазанная речь, трудно глотать, сухость во рту, нисходящая слабость мышц,
-#    паралич дыхательных мышц; токсин нельзя увидеть, почувствовать по запаху или вкусу; домашние консервы прокипятить 10 минут.
-#  - ВОЗ, информационный бюллетень «Ботулизм»: инкубационный период обычно 12–36 ч; токсин разрушается кипячением;
-#    лечение — антитоксин и ИВЛ; восстановление может занять недели и месяцы.
-#  - Роспотребнадзор, памятка о профилактике ботулизма: основная причина в РФ — домашние консервы (особенно грибы),
-#    вздутые крышки — признак опасности, но опасной может быть и банка без вздутия.
-import math
+#  - CDC «Botulism — Signs and Symptoms», «Home-Canned Foods»: симптомы обычно через 18–36 ч (от 6 ч до 10 дней):
+#    двоение, опущенные веки, смазанная речь, трудно глотать, сухость во рту, нисходящая слабость, паралич дыхательных мышц;
+#    токсин нельзя увидеть, почувствовать по запаху или вкусу; домашние консервы прокипятить 10 минут.
+#  - ВОЗ, бюллетень «Ботулизм»: инкубация обычно 12–36 ч; токсин разрушается кипячением; лечение — антитоксин и ИВЛ;
+#    восстановление — недели и месяцы.
+#  - Роспотребнадзор, памятка о профилактике ботулизма: основная причина в РФ — домашние консервы (особенно грибы);
+#    вздутая крышка — признак опасности, но опасной может быть и банка без вздутия.
+import ui
+import props as PR
 
-STAND = {"arm_a_r": 0.14, "arm_a_l": 0.14}
-EAT = {"arm_a_r": 0.6, "arm_b_r": 2.4, "arm_s_r": 0.6, "arm_a_l": 0.3, "arm_b_l": 0.6}
-WEAK = {"arm_a_r": 0.04, "arm_a_l": 0.04, "head": -0.1}
-LYING = {"rot": -math.pi / 2, "cy": 0.5, "dy": 0.12, "arm_a_r": 0.05, "arm_a_l": 0.05}
+OLEG = dict(outfit="tshirt", shirt=(60, 74, 60), hair=(48, 34, 26), skin=(230, 180, 146))
 
 
-def jar(d, x, y, sc, bulge=1.0, t=0.0):
-    """mushroom jar centred at (x, y-bottom), 1080-space"""
-    w, h = 170 * sc, 260 * sc
-    d.rounded_rectangle((x - w / 2, y - h, x + w / 2, y), radius=int(28 * sc), fill=(150, 175, 185, 120), outline=(220, 235, 240, 255), width=int(5 * sc))
-    d.rounded_rectangle((x - w / 2 + 12 * sc, y - h + 50 * sc, x + w / 2 - 12 * sc, y - 12 * sc), radius=int(18 * sc), fill=(120, 100, 50, 230))
-    for k in range(9):
-        mx = x - w / 2 + 34 * sc + (k % 3) * 50 * sc
-        my = y - 50 * sc - (k // 3) * 60 * sc
-        d.chord((mx - 26 * sc, my - 22 * sc, mx + 26 * sc, my + 18 * sc), 180, 360, fill=(170, 120, 60, 255))
-        d.rectangle((mx - 7 * sc, my - 2 * sc, mx + 7 * sc, my + 22 * sc), fill=(220, 200, 160, 255))
-    d.rectangle((x - w / 2 - 6 * sc, y - h - 26 * sc, x + w / 2 + 6 * sc, y - h + 6 * sc), fill=(200, 176, 60, 255))
-    if bulge:
-        b = 34 * sc * bulge
-        d.chord((x - w / 2 - 6 * sc, y - h - 26 * sc - b, x + w / 2 + 6 * sc, y - h - 26 * sc + b), 180, 360, fill=(200, 176, 60, 255))
-    for k in range(5):
-        ph = (t * 0.6 + k * 0.2) % 1
-        bx = x - w / 2 + 30 * sc + k * 26 * sc
-        by = lerp(y - 20 * sc, y - h + 60 * sc, ph)
-        d.ellipse((bx - 5 * sc, by - 5 * sc, bx + 5 * sc, by + 5 * sc), fill=(255, 255, 255, 110))
+def H(**kw):
+    return dict(OLEG, **kw)
 
 
-def hook_draw(img, d, t, u, *_):
-    g = Image.new("RGBA", (W, H), (0, 0, 0, 0))
-    ImageDraw.Draw(g).ellipse((300, 760, 780, 1300), fill=(200, 160, 60, 40))
-    img.alpha_composite(g.filter(ImageFilter.GaussianBlur(60)))
-    d = ImageDraw.Draw(img)
-    d.rectangle((0, 1260, W, 1300), fill=(70, 52, 40, 255))
-    jar(d, 540, 1260, 1.6, bulge=0.8 + 0.2 * math.sin(t * 5), t=t)
-    # spoon
-    d.line((760, 1100, 980, 900), fill=(200, 205, 215, 255), width=16)
-    d.ellipse((720, 1080, 800, 1140), fill=(200, 205, 215, 255))
+def table_jar(img, t, u, sh):
+    from gfx import shade
+    shade(img, [(-20, 1380), (1100, 1380), (1100, 1560), (-20, 1560)], (110, 78, 56), light=(0, -1), hi=0.3, lo=0.4, inner=0.3)
+    PR.jar(img, 820, 1420, 150, bulge=0.6, t=t)
+    shade(img, None, (240, 240, 244), ellipse=(300, 1410, 170, 40), hi=0.3, lo=0.3, inner=0.3)
 
 
-def draw_table(img, d, t, u, T0, s, T):
-    k = s / 900
-    a, b = T0(0.10, 0.52), T0(0.75, 0.55)
-    d.rectangle(A.box(a, b), fill=(110, 80, 60, 255))
-    for xx in (0.14, 0.71):
-        a, b = T0(xx - 0.01, 0.55), T0(xx + 0.01, 1.0)
-        d.rectangle(A.box(a, b), fill=(90, 66, 50, 255))
-    x, y = T0(0.52, 0.52)
-    jar(d, x, y, k * 0.32, bulge=0.7, t=t)
-    a, b = T0(0.22, 0.505), T0(0.38, 0.52)
-    d.ellipse(A.box(a, b), fill=(240, 240, 240, 255))
-    for j in range(4):
-        a, b = T0(0.25 + j * 0.03, 0.49), T0(0.27 + j * 0.03, 0.51)
-        d.chord(A.box(a, b), 180, 360, fill=(170, 120, 60, 255))
+def jar_close(img, t, u, sh):
+    PR.jar(img, 540, 1440, 330, bulge=0.8 + 0.1 * math.sin(t * 3), t=t)
 
 
-def draw_vent(img, d, t, u, T0, s, T):
-    k = s / 900
-    a, b = T0(0.45, 0.20), T0(0.70, 0.45)
-    d.rounded_rectangle(A.box(a, b), radius=int(10 * k), fill=(70, 80, 92, 255), outline=(150, 160, 170, 255), width=max(2, int(4 * k)))
-    a2, b2 = T0(0.47, 0.22), T0(0.68, 0.32)
-    d.rectangle(A.box(a2, b2), fill=(12, 20, 26, 255))
-    pts = []
-    for j in range(40):
-        xx = lerp(a2[0] + 6 * k, b2[0] - 6 * k, j / 39)
-        ph = (t * 0.25 - j / 39 * 1.5) % 1
-        pts.append((xx, (a2[1] + b2[1]) / 2 - 0.03 * s * math.sin(ph * 2 * math.pi) * (ph < 0.5)))
-    d.line(pts, fill=(90, 200, 255, 255), width=max(2, int(3 * k)))
-    # tube to the mouth
-    d.line([T0(0.45, 0.40), T0(0.25, 0.42), T(0.0, 0.17)], fill=(200, 220, 230, 255), width=max(3, int(10 * k)), joint="curve")
+def jar_inside(img, t, u, sh):
+    O.vessel(img, t, flow=0.15, cells=0, bacteria=14, toxin=int(4 + 14 * u), col_bg=(60, 58, 26), y0=600, y1=1320)
 
 
-def xr_resp(img, d, t, u, T0, s, T):
-    pass
+def toxin_big(img, t, u, sh):
+    glow(img, 540, 1000, 500, (120, 200, 80), a=0.25)
+    for k in range(7):
+        a = k * 0.9 + t * 0.2
+        r = 220 + 60 * math.sin(k)
+        O.molecule(img, 540 + r * math.cos(a), 1000 + r * 0.8 * math.sin(a), 34, (150, 230, 80), t + k)
+    O.molecule(img, 540, 1000, 70, (160, 240, 90), t)
+
+
+def syn(img, t, u, sh):
+    O.synapse(img, t, block=smooth((u - 0.2) / 0.5), cx=540, cy=980, s=420)
+
+
+def body_paralysis(img, t, u, sh):
+    O.silhouette(img, 540, 900, 300, alpha=0.4)
+    lungs_small(img, t, u, sh, show=False)
+    k = 0.15 + 0.7 * smooth(u)
+    lay = Image.new("RGBA", img.size, (0, 0, 0, 0))
+    y = 280 + 1300 * k
+    ImageDraw.Draw(lay).rectangle((0, 0, W, y), fill=(120, 140, 170, 130))
+    m = Image.new("L", img.size, 0)
+    lay = lay.filter(ImageFilter.GaussianBlur(40))
+    img.alpha_composite(lay)
+    stroke_path(img, [(160, y), (920, y)], (150, 230, 80, 220), 6, blur=3)
+
+
+def lungs_small(img, t, u, sh, show=True):
+    b = 1 + 0.06 * math.sin(t * 2.6) * (1 - 0.85 * smooth(u))
+    O.lungs(img, 540, 900, 260, breath=b, dark=0.2 * u, heart_beat=0.5 + 0.5 * math.sin(t * 9))
+    if show:
+        tube(img, [(250, 1260), (540, 1180), (830, 1260)], (200, 90, 100), 30, outline=(40, 12, 18, 255))
+
+
+def call103(img, t, u, sh):
+    ui.phone(img, 540, 1060, 360, t, screen=dict(top="ВЫЗОВ…", big="103", sub="СКОРАЯ ПОМОЩЬ"), call_t=u * 2.6)
+
+
+def vent(img, t, u, sh):
+    PR.ventilator_tube(img, 600, 920, 210, t)
+    ui.monitor(img, 70, 1170, 420, 1420, t, hr=96, spo2=97)
 
 
 SPEC = dict(
-    style=2,
     slug="botulizm",
     title="Ботулизм из домашней банки",
     caption="Банку грибов открыли «на закуску»… через сутки он всё понимал, но не мог даже позвать на помощь 😨 Кипятишь домашние консервы? 👇",
     hashtags="#ботулизм #консервы #чтобудетесли #симуляция #организм",
-    over="ОЛЕГ, 45 · СУББОТА",
-    card=dict(label="ПАРАЛИЧ МЫШЦ", right_label="ЧАС", notes=[(0, "норма"), (30, "слабость"), (70, "критично")],
-              minis=[("ПУЛЬС", "hr"), ("ДЫХАНИЕ", "НОРМА"), ("СОЗНАНИЕ", "ЯСНОЕ")]),
-    hr=[(0, 78), (12, 80), (24, 92), (32, 104), (38, 112), (44, 90), (60, 80)],
     shots=[
-        dict(kind="hook", dur=2.3, phrase="ЛОЖКА ГРИБОВ —\nИ ТЫ НЕ ДЫШИШЬ", draw=hook_draw, over="ДОМАШНИЕ КОНСЕРВЫ"),
-        dict(kind="eye", dur=1.2, card=False, lid=[(0, 0.0), (1, 0.3)], pupil=0.6, look=0.04, over="БОТУЛИЗМ"),
-        dict(kind="scene", dur=2.9, preset="kitchen2", ground=1500, title="ДОМАШНЯЯ ЗАКАТКА", tag="крышку чуть вздуло — «да нормально»",
-             cam=(0.3, 0.37, 1.2), outfit="casual", expr="happy", pose=EAT, draw=draw_table, clock="0", value=0,
-             callouts=[(0.3, (790, 1000), (860, 820), "КРЫШКУ ВЗДУЛО")]),
-        dict(kind="flasks", dur=3.0, over="В БАНКЕ", title="НИ ЗАПАХА, НИ ВКУСА", tag="без воздуха бактерия делает яд",
-             items=[("споры в грибах", (170, 130, 70)), ("банка без воздуха", (140, 150, 120)), ("ботулотоксин", (150, 220, 90))], organ=None, splash=True, clock="0"),
-        dict(kind="scene", dur=2.8, preset="kitchen2", ground=1500, over="ЧАС 18", title="ВСЁ НОРМАЛЬНО?", tag="ни боли, ни жара — только сухо во рту",
-             cam=(0.1, 0.37, 1.2), outfit="casual", expr="normal", pose=STAND, value=5, clock="18"),
-        dict(kind="scene", dur=2.8, preset="kitchen2", ground=1500, over="ЧАС 22", title="ДВОИТСЯ В ГЛАЗАХ", tag="яд глушит сигнал от нервов к мышцам",
-             cam=(0.3, 0.37, 1.2), outfit="casual", expr="normal", pose=STAND, draw=draw_table, pov=dict(double=[(0, 0.3), (1, 1.0)], blur=0.25),
-             value=(10, 20), clock="22", hud=True),
-        dict(kind="eye", dur=2.6, over="ЧАС 24", title="ВЕКИ ПАДАЮТ", tag="сначала слабеют мышцы лица и глаз", lid=[(0, 0.3), (1, 0.6)], pupil=0.7,
-             value=(20, 30), clock="24", minis=[("ПУЛЬС", "hr"), ("ДЫХАНИЕ", "НОРМА"), ("РЕЧЬ", "!СМАЗАНА")]),
-        dict(kind="micro", dur=2.8, cells="neuron", over="ЧАС 26", title="ПРОВОДА ОТКЛЮЧЕНЫ", tag="нервы целы — но мышцы не слышат команд",
-             kill=[(0, 0.2), (1, 0.7)], attackers=30, attack_col=(150, 220, 90), value=(30, 45), clock="26", red=0.3),
-        dict(kind="face", dur=2.8, preset="kitchen2", over="ЧАС 28", title="НЕ ПРОГЛОТИТЬ", tag="трудно говорить и глотать", expr="pain", zoom=4.6,
-             outfit="casual", value=(45, 55), clock="28", say="«мне… пло… хо»", say_y=1190,
-             lighting=(540, 820, 1000, 1.0, 0.5, (255, 230, 200))),
-        dict(kind="xray", dur=3.0, over="ЧАС 32", title="ПАРАЛИЧ ИДЁТ ВНИЗ", tag="шея, руки… дыхательные мышцы", cam=(0.0, 0.28, 1.8),
-             expr="sleep", breath_amp=[(0, 0.05), (1, 0.008)], value=(55, 75), clock="32", red=0.5,
-             minis=[("ПУЛЬС", "hr"), ("ДЫХАНИЕ", "!СЛАБОЕ"), ("СОЗНАНИЕ", "ЯСНОЕ")],
-             glow=[dict(at=(0.0, 0.40), r=0.07, col=(255, 60, 60), k=[(0, 0.2), (1, 1.0)])],
-             callouts=[(0.35, (540, 945), (800, 1040), "ДИАФРАГМА")], riser=True),
-        dict(kind="face", dur=3.0, preset="kitchen2", over="ЧАС 34", title="ОН ВСЁ ПОНИМАЕТ", tag="сознание ясное — но не может позвать", expr="sleep",
-             zoom=4.8, outfit="casual", tears=0.7, value=(75, 85), clock="34", red=0.6, pov=dict(tunnel=[(0, 0.2), (1, 0.6)]),
-             minis=[("ПУЛЬС", "hr"), ("ДЫХАНИЕ", "!ЕЛЕ-ЕЛЕ"), ("СОЗНАНИЕ", "ЯСНОЕ")], name="aware",
-             lighting=(540, 820, 900, 0.9, 0.35, (230, 210, 210))),
-        dict(kind="phone", dur=2.6, over="ЧАС 34", title="ЖЕНА ЗВОНИТ 103", tag="«он не может говорить!»", clock="34",
-             screen=dict(top="вызов…", big="103", sub="скорая помощь", timer=True)),
-        dict(kind="scene", dur=3.0, preset="ward", ground=1500, over="РЕАНИМАЦИЯ", title="ДЫШИТ АППАРАТ", tag="антитоксин остановил яд — но паралич остался",
-             cam=(0.0, 0.62, 1.05), outfit="hosp", expr="sleep", pose=LYING, props_back=[("bed", {})], draw=draw_vent, value=85, clock="36",
-             minis=[("ПУЛЬС", "hr"), ("ДЫХАНИЕ", "!ИВЛ"), ("СОЗНАНИЕ", "ЯСНОЕ")]),
-        dict(kind="scene", dur=2.8, preset="ward", ground=1500, over="НЕДЕЛИ СПУСТЯ", title="УЧИТСЯ ЗАНОВО", tag="нервные окончания отрастают неделями и месяцами",
-             cam=(0.1, 0.42, 1.2), outfit="hosp", expr="normal", pose=WEAK, value=(60, 35), clock="+6 НЕД",
-             minis=[("ПУЛЬС", "hr"), ("ДЫХАНИЕ", "САМ"), ("СИЛЫ", "!МАЛО")]),
-        dict(kind="fact", dur=2.6, value="12–36 ЧАСОВ", size=120, line="обычно проходит от еды до первых симптомов", plaque="иногда — до 10 дней", pages=(5, 0)),
-        dict(kind="fact", dur=2.6, value="0 ЗАПАХА", line="ботулотоксин не видно и не почувствовать на вкус", plaque="банка может выглядеть нормально", pages=(5, 1)),
-        dict(kind="fact", dur=2.6, value="НЕДЕЛИ", line="может длиться жизнь на аппарате ИВЛ", plaque="пока восстанавливаются нервы", pages=(5, 2)),
-        dict(kind="fact", dur=2.6, value="10 МИНУТ", col=(255, 210, 70), line="кипячения перед едой разрушают токсин", plaque="совет для домашних консервов", pages=(5, 3)),
-        dict(kind="fact", dur=3.0, value="ДВОИТСЯ + ВЕКИ?", size=100, line="после домашних консервов —", plaque="сразу звони 103", pages=(5, 4)),
-        dict(kind="loop", dur=1.6),
+        dict(dur=2.2, bg="kitchen", hero=dict(x=540, y=880, s=250, **H(mouth="slack", brows="worried", lid=0.55, tears=0.9, pupil=0.7, tilt=0.06)),
+             title=["ЛОЖКА ГРИБОВ —", "{И ТЫ НЕ ДЫШИШЬ}"], fx=dict(red=0.5), cam=dict(z=[(0, 1.12), (1, 1.0)]), name="hook"),
+        dict(dur=1.6, bg="studio:green", draw=[jar_close], title=["ЧТО БУДЕТ", "С ТЕЛОМ?"], fx=dict(red=0.3), cam=dict(z=[(0, 1.0), (1, 1.1)])),
+        dict(dur=2.8, bg="kitchen", hero=dict(x=540, y=960, s=180, **H(mouth="smile", brows="raised")), front=[table_jar],
+             title=["СУББОТА, УЖИН"], sub="домашние грибы, закатанные летом", hud=dict(time=("0 Ч", "ПОСЛЕ ЕДЫ"), hr=(76, ""), o2=("99%", "")),
+             cam=dict(z=[(0, 1.0), (1, 1.07)])),
+        dict(dur=2.8, bg="studio:green", draw=[jar_close], title=["КРЫШКУ", "{ЧУТЬ ВЗДУЛО}"], sub="«да нормально, съедим»",
+             callouts=[(0.3, (540, 860), (820, 720), "ВЗДУТИЕ", (255, 210, 80))], cam=dict(z=[(0, 1.0), (1, 1.15)], c=(540, 900))),
+        dict(dur=2.8, bg="studio:green", draw=[jar_inside], title=["В БАНКЕ", "{БЕЗ ВОЗДУХА}"], sub="бактерия выделяет яд", cam=dict(z=[(0, 1.0), (1, 1.1)]),
+             callouts=[(0.4, (560, 960), (820, 1400), "БОТУЛОТОКСИН", (170, 240, 90))]),
+        dict(dur=2.6, bg="studio:green", draw=[toxin_big], title=["НИ ВКУСА,", "[НИ ЗАПАХА]"], sub="один из сильнейших ядов в природе", cam=dict(z=[(0, 1.0), (1, 1.15)], rot=[(0, 0), (1, 4)])),
+        dict(dur=2.8, bg="kitchen", hero=dict(x=540, y=900, s=230, **H(mouth="neutral", brows="neutral")),
+             title=["ЧАС 18.", "ВСЁ [НОРМАЛЬНО?]"], sub="только сухо во рту", hud=dict(time=("18 Ч", "ПОСЛЕ ЕДЫ"), hr=(80, ""), o2=("98%", "")),
+             cam=dict(z=[(0, 1.0), (1, 1.06)]), name="calm"),
+        dict(dur=2.8, bg="kitchen", hero=dict(x=540, y=900, s=230, **H(mouth="worried", brows="worried", lid=0.2)), front=[table_jar],
+             title=["ВСЁ", "[ДВОИТСЯ]"], sub="яд добрался до нервов", fx=dict(double=[(0, 0.3), (1, 1.0)], blur=[(0, 0.0), (1, 0.15)]),
+             hud=dict(time=("22 Ч", "ПОСЛЕ ЕДЫ"), hr=(84, ""), o2=("98%", ""))),
+        dict(dur=3.0, bg="studio:teal", draw=[syn], title=["НЕРВ ШЛЁТ СИГНАЛ —", "{МЫШЦА НЕ СЛЫШИТ}"], sub="токсин блокирует передачу",
+             callouts=[(0.5, (540, 1030), (180, 1290), "ТОКСИН", (170, 240, 90))], cam=dict(z=[(0, 1.0), (1, 1.1)])),
+        dict(dur=2.8, bg="kitchen", hero=dict(x=540, y=880, s=255, **H(mouth="worried", brows="worried", lid=[(0, 0.45), (1, 0.72)], sweat=0.4)),
+             title=["ВЕКИ", "[ПАДАЮТ]"], sub="первыми слабеют мышцы лица", hud=dict(time=("24 Ч", "ПОСЛЕ ЕДЫ"), hr=(88, ""), o2=("97%", "")),
+             cam=dict(z=[(0, 1.0), (1, 1.12)])),
+        dict(dur=2.8, bg="kitchen", hero=dict(x=540, y=880, s=240, **H(mouth="slack", brows="pain", lid=0.65, sweat=0.6, arms="throat")),
+             title=["НЕ МОЖЕТ", "{ГЛОТАТЬ}"], sub="речь смазана: «мнэ… пло… хо»", hud=dict(time=("28 Ч", "ПОСЛЕ ЕДЫ"), hr=(94, ""), o2=("96%", "")),
+             cam=dict(z=[(0, 1.0), (1, 1.08)])),
+        dict(dur=2.8, bg="studio:blue", draw=[body_paralysis], title=["ПАРАЛИЧ", "[ИДЁТ ВНИЗ]"], sub="шея, руки… грудь", cam=dict(z=[(0, 1.0), (1, 1.06)]),
+             hud=dict(time=("32 Ч", "ПОСЛЕ ЕДЫ"), hr=(102, ""), o2=("93%", ""))),
+        dict(dur=3.0, bg="studio:red", draw=[lungs_small], title=["ДИАФРАГМА", "{СДАЁТСЯ}"], sub="каждый вдох всё слабее",
+             callouts=[(0.35, (540, 1200), (800, 1400), "ДИАФРАГМА", (255, 120, 120))], fx=dict(red=0.5, flash=[(0.05, 0.7)]),
+             hud=dict(time=("34 Ч", "ПОСЛЕ ЕДЫ"), hr=(112, ""), o2=("88%", "")), cam=dict(z=[(0, 1.0), (1, 1.12)]), name="drop"),
+        dict(dur=3.2, bg="kitchen", hero=dict(x=540, y=880, s=260, **H(mouth="slack", brows="worried", lid=0.62, tears=1.0, pale=0.4, blue=0.3, pupil=0.8)),
+             title=["ОН ВСЁ СЛЫШИТ", "{И ВСЁ ПОНИМАЕТ}"], sub="но не может даже позвать на помощь", fx=dict(tunnel=[(0, 0.3), (1, 0.7)], red=0.3),
+             hud=dict(time=("34 Ч", "ПОСЛЕ ЕДЫ"), hr=(118, ""), o2=("84%", "")), cam=dict(z=[(0, 1.0), (1, 1.15)]), name="aware"),
+        dict(dur=2.6, bg="kitchen", draw=[call103], title=["ЖЕНА ЗВОНИТ {103}"], sub="«он не может говорить!»", cam=dict(z=[(0, 1.0), (1, 1.06)])),
+        dict(dur=3.0, bg="ward", hero=dict(x=600, y=920, s=210, **H(outfit="gown", mouth="slack", lid=0.7, pale=0.3)), front=[vent],
+             title=["ДЫШИТ", "{АППАРАТ}"], sub="антитоксин остановил яд — но не вернул силу", hud=dict(time=("36 Ч", "ПОСЛЕ ЕДЫ"), hr=(96, ""), o2=("97%", "")),
+             cam=dict(z=[(0, 1.0), (1, 1.06)]), soft_cut=True),
+        dict(dur=2.8, bg="ward", hero=dict(x=540, y=900, s=230, **H(outfit="gown", mouth="worried", brows="worried", lid=0.3, pale=0.2)),
+             title=["НЕДЕЛИ", "[ВОССТАНОВЛЕНИЯ]"], sub="нервные окончания отрастают заново", hud=dict(time=("6 НЕД", "СПУСТЯ"), hr=(80, ""), o2=("98%", "")),
+             cam=dict(z=[(0, 1.0), (1, 1.06)])),
+        dict(dur=2.8, kind="fact", fact=dict(page=(1, 5), tag="когда", title=["СИМПТОМЫ ЧЕРЕЗ"], big="12–36 Ч", unit="после еды", line="иногда — до 10 дней")),
+        dict(dur=2.8, kind="fact", fact=dict(page=(2, 5), tag="ловушка", title=["ЗАПАХ ЯДА"], big="0", size=260, unit="и вкуса тоже", line="банка может выглядеть нормально")),
+        dict(dur=2.8, kind="fact", fact=dict(page=(3, 5), tag="лечение", title=["НА АППАРАТЕ ИВЛ"], big="НЕДЕЛИ", size=170, unit="а иногда месяцы", line="пока не отрастут нервные окончания")),
+        dict(dur=2.8, kind="fact", fact=dict(page=(4, 5), tag="защита", title=["ПРОКИПЯТИ"], big="10 МИН", size=190, unit="домашние консервы", line="кипячение разрушает токсин")),
+        dict(dur=3.0, kind="fact", fact=dict(page=(5, 5), tag="что делать", title=["ДВОИТСЯ + ВЕКИ?"], big="103", unit="сразу, не жди утра", line="особенно после домашних заготовок")),
+        dict(dur=1.6, bg="kitchen", hero=dict(x=540, y=880, s=250, **H(mouth="slack", brows="worried", lid=0.55, tears=0.9, pupil=0.7, tilt=0.06)),
+             title=["ЛОЖКА ГРИБОВ —", "{И ТЫ НЕ ДЫШИШЬ}"], fx=dict(red=0.5), cam=dict(z=[(0, 1.0), (1, 1.12)]), soft_cut=True, no_hud=True, name="loop"),
     ],
-    sfx=[(0.3, "gasp", {"g": 0.15}), (("aware", 0.4), "breath", {"dur": 2.0, "g": 0.25}), (24.0, "groan", {"dur": 1.4, "f0": 110, "g": 0.18})],
+    music=dict(bpm=118, drop="drop", calm=["calm"], key=-2, prog=[0, 0, -4, -2], mel=[12, 15, 19, 17, 15, 12, 10, 12]),
+    sfx=[(("hook", 0.2), "breath", dict(dur=1.8, rate=1.4, g=0.25)), (("aware", 0.2), "breath", dict(dur=2.6, rate=1.0, g=0.3)),
+         (("drop", 0.05), "boom", dict(g=0.7)), (("aware", 0.4), "heartbeat", dict(dur=2.6, bpm=118, g=0.5))],
 )
