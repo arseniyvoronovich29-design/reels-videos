@@ -134,7 +134,7 @@ def build(E, path):
         R += np.roll(b, 3000) * e * g
 
     # ---------------- drone + dissonant cluster ----------------
-    dr_e = seg_env(lambda sh: 0.0 if sh["kind"] in ("facts",) else (0.25 + 0.7 * sh.get("red", 0.2)))
+    dr_e = seg_env(lambda sh: 0.0 if sh["kind"] in ("facts", "fact") else (0.25 + 0.7 * sh.get("red", 0.2)))
     drone = sum(a * np.sin(2 * np.pi * f * t + rng.uniform(0, 6)) for f, a in [(41.2, 1), (41.5, 0.8), (61.7, 0.5), (87.3, 0.3), (98.0, 0.2)])
     drone *= 0.7 + 0.3 * np.sin(2 * np.pi * 0.21 * t)
     L += drone * dr_e * 0.16
@@ -145,7 +145,7 @@ def build(E, path):
     L += cl * 0.05
     R += cl * 0.05
     # calm pad on facts / black / myth
-    pad_e = seg_env(lambda sh: 0.3 if sh["kind"] in ("facts", "black", "myth") else 0.0)
+    pad_e = seg_env(lambda sh: 0.3 if sh["kind"] in ("facts", "black", "myth", "fact") else 0.0)
     pad = sum(np.sin(2 * np.pi * f * t + rng.uniform(0, 6)) for f in (110, 130.8, 164.8))
     pad = filt(pad, 60, 800) * pad_e
     L += pad * 0.05
@@ -307,7 +307,7 @@ def build(E, path):
         ph = E.phase_at(x)
         if E.hr_at(x) > 1 and math.floor(ph - 0.26) > math.floor(prev - 0.26):
             _, sh = E.shot_at(x)
-            gg = sh.get("hb", 0.0 if sh["kind"] in ("facts", "myth", "black") else 0.65)
+            gg = sh.get("hb", 0.0 if sh["kind"] in ("facts", "myth", "black", "fact") else 0.65)
             i = int(x * SR)
             for off, g in ((0, 1.0), (0.16, 0.6)):
                 j = i + int(off * SR)

@@ -11,6 +11,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 from base import *          # noqa: F401,F403
 import base as B
+import style2 as S2
 
 YEL = (255, 206, 60)
 TAGRED = (210, 40, 46)
@@ -35,6 +36,9 @@ def load(path):
     spec.loader.exec_module(m)
     SPEC_MOD = m
     S = m.SPEC
+    if S.get("style") == 2:
+        globals()["dark_bg"] = S2.dark_bg2
+        m.__dict__["dark_bg"] = S2.dark_bg2
     S["_dir"] = os.path.dirname(os.path.abspath(path))
     SHOTS = []
     t = 0.0
@@ -247,8 +251,119 @@ def bg_preset(img, d, name, t, sh):
         img.alpha_composite(grad((8, 12, 30), (34, 30, 50), Wd, Hd))
         d = ImageDraw.Draw(img)
         d.rectangle((0, gy, Wd, Hd), fill=(40, 36, 34, 255))
+    elif name in ("room", "plane", "ward", "dacha", "road", "kitchen2", "stairs"):
+        d = bg_style2(img, name, t, sh, gy)
     else:
         img.alpha_composite(grad((20, 20, 26), (8, 8, 10), Wd, Hd))
+    return ImageDraw.Draw(img)
+
+
+def bg_style2(img, name, t, sh, gy):
+    """darker, detailed presets for style 2 (drawn at SS scale)"""
+    Wd, Hd = W * SS, H * SS
+    if name == "room":
+        img.alpha_composite(grad((44, 46, 62), (28, 30, 42), Wd, Hd))
+        d = ImageDraw.Draw(img)
+        for x in range(0, Wd, 90 * SS):
+            d.line((x, 0, x, gy), fill=(50, 52, 68, 255), width=3 * SS)
+        # window with city lights
+        d.rectangle(P(90, 420) + P(430, 900), fill=(16, 20, 36, 255), outline=(70, 66, 74, 255), width=12 * SS)
+        rr = np.random.default_rng(2)
+        for k in range(30):
+            x, y = rr.uniform(110, 410), rr.uniform(700, 890)
+            d.rectangle(P(x, y) + P(x + 8, y + 12), fill=(250, 210, 120, 255) if k % 3 else (140, 180, 255, 255))
+        d.line(P(260, 420) + P(260, 900), fill=(70, 66, 74, 255), width=8 * SS)
+        # garland
+        for k in range(22):
+            x = 40 + k * 48
+            y = 330 + 26 * math.sin(k * 0.55)
+            c = [(255, 80, 80), (255, 210, 80), (90, 220, 120), (90, 160, 255)][k % 4]
+            on = 0.6 + 0.4 * math.sin(t * 3 + k)
+            d.ellipse(P(x - 7, y - 7) + P(x + 7, y + 7), fill=tuple(int(cc * on) for cc in c) + (255,))
+        d.line([P(40 + k * 48, 330 + 26 * math.sin(k * 0.55)) for k in range(22)], fill=(30, 30, 30, 255), width=2 * SS)
+        # shelf
+        d.rectangle(P(620, 520) + P(1000, 535), fill=(110, 80, 60, 255))
+        for k, c in enumerate([(200, 80, 60), (80, 120, 180), (220, 190, 90), (120, 160, 110)]):
+            d.rectangle(P(640 + k * 60, 440 + (k % 2) * 20) + P(680 + k * 60, 520), fill=c + (255,))
+        d.rectangle((0, gy, Wd, Hd), fill=(54, 42, 40, 255))
+    elif name == "kitchen2":
+        img.alpha_composite(grad((48, 52, 62), (32, 34, 44), Wd, Hd))
+        d = ImageDraw.Draw(img)
+        for y in range(int(500 * SS), int(gy), 50 * SS):
+            d.line((0, y, Wd, y), fill=(58, 62, 74, 255), width=2 * SS)
+        for x in range(0, Wd, 50 * SS):
+            d.line((x, 500 * SS, x, gy), fill=(58, 62, 74, 255), width=2 * SS)
+        d.rectangle(P(0, 160) + P(1080, 470), fill=(70, 56, 46, 255))
+        for x in (0, 270, 540, 810):
+            d.rectangle(P(x + 10, 170) + P(x + 260, 460), outline=(50, 40, 34, 255), width=4 * SS)
+            d.rectangle(P(x + 120, 300) + P(x + 150, 310), fill=(180, 170, 150, 255))
+        d.ellipse(P(700, 230) + P(760, 290), fill=(255, 220, 150, 255))
+        d.rectangle((0, gy, Wd, Hd), fill=(70, 60, 54, 255))
+    elif name == "plane":
+        img.alpha_composite(grad((58, 62, 76), (34, 36, 46), Wd, Hd))
+        d = ImageDraw.Draw(img)
+        d.rectangle(P(0, 160) + P(1080, 330), fill=(70, 74, 88, 255))
+        for k in range(4):
+            x = 60 + k * 270
+            d.rounded_rectangle(P(x, 470) + P(x + 120, 660), radius=50 * SS, fill=(90, 96, 110, 255))
+            d.rounded_rectangle(P(x + 14, 484) + P(x + 106, 646), radius=40 * SS, fill=(14, 18, 34, 255))
+            d.ellipse(P(x + 40, 520) + P(x + 52, 532), fill=(255, 255, 240, 200))
+        for k in range(5):
+            x = -40 + k * 260
+            d.rounded_rectangle(P(x, 720) + P(x + 200, 1250), radius=40 * SS, fill=(40, 60, 110, 255))
+            d.rounded_rectangle(P(x + 20, 680) + P(x + 180, 760), radius=20 * SS, fill=(230, 230, 236, 255))
+        for k in range(8):
+            x = 80 + k * 125
+            d.ellipse(P(x, 230) + P(x + 16, 246), fill=(255, 230, 160, 255))
+        d.rectangle((0, gy, Wd, Hd), fill=(46, 50, 64, 255))
+    elif name == "ward":
+        img.alpha_composite(grad((40, 50, 60), (26, 32, 40), Wd, Hd))
+        d = ImageDraw.Draw(img)
+        d.rectangle(P(620, 380) + P(980, 760), fill=(14, 22, 40, 255), outline=(90, 100, 110, 255), width=10 * SS)
+        d.line(P(800, 380) + P(800, 760), fill=(90, 100, 110, 255), width=6 * SS)
+        for k in range(6):
+            d.line(P(620, 400 + k * 60) + P(980, 400 + k * 60), fill=(60, 70, 84, 255), width=4 * SS)
+        d.rectangle(P(0, 860) + P(1080, 880), fill=(60, 74, 84, 255))
+        d.rectangle((0, gy, Wd, Hd), fill=(56, 64, 72, 255))
+    elif name == "dacha":
+        img.alpha_composite(grad((40, 50, 80), (120, 90, 90), Wd, int(gy)))
+        d = ImageDraw.Draw(img)
+        d.ellipse(P(820, 300) + P(900, 380), fill=(255, 230, 180, 255))
+        rr = np.random.default_rng(9)
+        for k in range(9):
+            x = rr.uniform(-60, 1100)
+            r = rr.uniform(120, 220)
+            d.ellipse(P(x - r, gy / SS - 300 - r) + P(x + r, gy / SS - 300 + r * 0.8), fill=(28, 44, 40, 255))
+        for k in range(0, 1080, 40):
+            d.rectangle(P(k, gy / SS - 160) + P(k + 26, gy / SS), fill=(96, 72, 54, 255))
+        d.rectangle(P(0, gy / SS - 130) + P(1080, gy / SS - 118), fill=(96, 72, 54, 255))
+        d.rectangle((0, gy, Wd, Hd), fill=(46, 62, 40, 255))
+    elif name == "road":
+        img.alpha_composite(grad((10, 14, 30), (40, 40, 60), Wd, int(gy)))
+        d = ImageDraw.Draw(img)
+        rr = np.random.default_rng(4)
+        for k in range(50):
+            x, y = rr.uniform(0, 1080), rr.uniform(160, 700)
+            d.ellipse(P(x, y) + P(x + 3, y + 3), fill=(200, 210, 255, 180))
+        off = (t * 900) % 300
+        for k in range(-1, 6):
+            x = k * 300 - off
+            d.rectangle(P(x, gy / SS - 420) + P(x + 18, gy / SS), fill=(60, 60, 70, 255))
+            d.ellipse(P(x - 30, gy / SS - 440) + P(x + 48, gy / SS - 410), fill=(255, 210, 140, 255))
+        d.rectangle((0, gy, Wd, Hd), fill=(36, 36, 42, 255))
+        for k in range(-1, 8):
+            x = k * 180 - (t * 1600) % 180
+            d.rectangle(P(x, gy / SS + 60) + P(x + 90, gy / SS + 72), fill=(220, 220, 210, 255))
+    elif name == "stairs":
+        img.alpha_composite(grad((54, 58, 70), (34, 36, 46), Wd, Hd))
+        d = ImageDraw.Draw(img)
+        for k in range(10):
+            y = gy / SS - k * 70
+            x = 560 + k * 50
+            d.rectangle(P(x, y - 70) + P(1080, y), fill=(74, 76, 88, 255), outline=(40, 42, 50, 255), width=3 * SS)
+        d.line([P(560, gy / SS - 160), P(1080, gy / SS - 760)], fill=(140, 120, 90, 255), width=10 * SS)
+        d.rectangle(P(80, 420) + P(330, 640), fill=(20, 26, 44, 255), outline=(90, 90, 100, 255), width=8 * SS)
+        d.rectangle((0, gy, Wd, Hd), fill=(60, 58, 60, 255))
     return ImageDraw.Draw(img)
 
 
@@ -450,6 +565,8 @@ def shot_face(t, u, sh):
 
 
 def xray_bg():
+    if S.get("style") == 2:
+        return S2.dark_bg2(0, 0.0).resize((W * SS, H * SS))
     img = Image.new("RGBA", (W * SS, H * SS), (6, 10, 18, 255))
     d = ImageDraw.Draw(img)
     for x in range(0, W * SS, 60 * SS):
@@ -703,7 +820,12 @@ def shot_facts(t, u, sh=None):
     return img
 
 
-KINDS = {"scene": shot_scene, "face": shot_face, "xray": shot_xray, "micro": shot_micro, "bignum": shot_bignum,
+KINDS = {"hook": lambda t, u, sh: S2.shot_hook(sys.modules[__name__], t, u, sh),
+         "eye": lambda t, u, sh: S2.shot_eye(sys.modules[__name__], t, u, sh),
+         "phone": lambda t, u, sh: S2.shot_phone(sys.modules[__name__], t, u, sh),
+         "flasks": lambda t, u, sh: S2.shot_flasks(sys.modules[__name__], t, u, sh),
+         "fact": lambda t, u, sh: S2.shot_fact(sys.modules[__name__], t, u, sh),
+         "scene": shot_scene, "face": shot_face, "xray": shot_xray, "micro": shot_micro, "bignum": shot_bignum,
          "flat": shot_flat, "black": shot_black, "myth": shot_myth, "facts": shot_facts}
 NO_HUD = ("black", "facts", "myth", "loop")
 
@@ -800,7 +922,105 @@ def render_shot(t, sh):
     return KINDS[sh["kind"]](t, u, sh)
 
 
+def hud2(img, t, i, sh):
+    kind = sh["kind"]
+    if kind in ("fact", "loop", "black", "facts") or sh.get("hud") is False:
+        return img
+    tr = t - sh["t0"]
+    u = tr / (sh["t1"] - sh["t0"])
+    first = i == 0
+    d = ImageDraw.Draw(img)
+    al = 1.0 if first else ease(tr / 0.18)
+    over = sh.get("over") if "over" in sh else S.get("over")
+    S2.pill(d, over, al=al)
+    if kind != "hook":
+        S2.ribbon(img, sh.get("title", ""), sh.get("tag", ""), tr, first=first)
+        S2.card(img, sys.modules[__name__], t, sh, al=1.0 if first else ease(tr / 0.25))
+    S2.callouts(img, sh, u, sh["t1"] - sh["t0"])
+    d = ImageDraw.Draw(img)
+    if sh.get("say"):
+        sa = ease((u - sh.get("say_at", 0.2)) / 0.12)
+        sf = F("Black", sh.get("say_size", 44))
+        txt = sh["say"]
+        while sf.getlength(txt) > 860:
+            sf = F("Black", sf.size - 4)
+        yy = sh.get("say_y", 1200)
+        w = sf.getlength(txt)
+        d.rounded_rectangle((540 - w / 2 - 24, yy - 12, 540 + w / 2 + 24, yy + sf.size + 22), radius=18, fill=(245, 245, 248, int(240 * sa)))
+        d.text((540 - w / 2, yy), txt, font=sf, fill=(20, 20, 26, int(255 * sa)))
+    for pop_ in sh.get("pops", []):
+        at, txt, x, y_ = pop_[:4]
+        tr2 = t - (sh["t0"] + at)
+        if 0 <= tr2 < (pop_[4] if len(pop_) > 4 else 99):
+            text_pop(d, txt, x, y_, 100, tr2, col=(255, 255, 255))
+    return img
+
+
+def render2(i):
+    t = i / FPS
+    si, sh = shot_at(t)
+    t0, t1, kind = sh["t0"], sh["t1"], sh["kind"]
+    if kind == "loop":
+        k = smooth((t - t0) / (t1 - t0 - 0.2))
+        prev = SHOTS[si - 1]
+        a = render2(int(round((prev["t1"] - 0.04) * FPS))).convert("RGB")
+        s0 = SHOTS[0]
+        tt = t - t0
+        img = render_shot(tt, s0)
+        if s0["kind"] not in ("hook", "fact", "eye"):
+            img = S2.grade(img)
+        b = hud2(img, tt, 0, s0).convert("RGB")
+        return Image.blend(a, b, k)
+    u = (t - t0) / (t1 - t0)
+    img = render_shot(t, sh)
+    if img.size != (W, H):
+        img = img.resize((W, H))
+    if kind in ("scene", "face", "xray", "micro", "custom", "flat", "bignum", "myth") and sh.get("grade", True):
+        img = S2.grade(img, red_tint=val(sh.get("red_tint", 0.0), u))
+    elif kind == "eye":
+        img = S2.grade(img, k=0.7, red_tint=val(sh.get("red_tint", 0.0), u))
+    elif sh.get("red_tint"):
+        img = S2.grade(img, k=0.0, red_tint=val(sh["red_tint"], u))
+    dr = sh.get("drift", 0.045 if kind not in ("fact", "hook") else 0.0)
+    if dr:
+        z = 1 + dr * smooth(u) + 0.0
+        w2, h2 = int(W * z), int(H * z)
+        img = img.resize((w2, h2), Image.BILINEAR).crop(((w2 - W) // 2, int((h2 - H) * 0.45), (w2 - W) // 2 + W, int((h2 - H) * 0.45) + H))
+    if sh.get("pov"):
+        p = {k_: val(v_, u) for k_, v_ in sh["pov"].items()}
+        img = S2.pov(img, p, t)
+    shk = val(sh.get("shake", 0), u)
+    for hit in sh.get("hits", []):
+        tr = t - (t0 + hit[0])
+        if 0 <= tr < 1.0:
+            shk += hit[1] * (1 - smooth(tr / 1.0))
+    if shk > 0.05:
+        dx, dy = int(14 * shk * math.sin(t * 61)), int(14 * shk * math.cos(t * 53))
+        img = ImageChops_offset(img, dx, dy)
+    rl = sh.get("red", 0.0)
+    if rl > 0 and kind not in ("fact", "hook"):
+        img.alpha_composite(vig_layer((150, 10, 20), min(1.0, rl * (0.35 + 0.3 * beat_pulse(t)))))
+    for fl in sh.get("flash", []):
+        tr = t - (t0 + fl[0])
+        if 0 <= tr < 0.7:
+            img.alpha_composite(Image.new("RGBA", (W, H), (220, 10, 24, int(200 * fl[1] * (1 - smooth(tr / 0.7))))))
+    img.alpha_composite(TOP_SH2)
+    img = hud2(img, t, si, sh)
+    if si > 0 and t - t0 < 0.14:
+        img = S2.glitch_cut(img, 1 - (t - t0) / 0.14, i)
+    for hit in sh.get("hits", []):
+        tr = t - (t0 + hit[0])
+        if 0 <= tr < 0.1 and len(hit) > 2 and hit[2]:
+            img.alpha_composite(Image.new("RGBA", (W, H), (255, 255, 255, int(220 * (1 - tr / 0.1)))))
+    return img.convert("RGB")
+
+
+TOP_SH2 = B.vgrad(150, 0, 0, 520)
+
+
 def render(i):
+    if S.get("style") == 2:
+        return render2(i)
     t = i / FPS
     si, sh = shot_at(t)
     t0, t1, kind = sh["t0"], sh["t1"], sh["kind"]
